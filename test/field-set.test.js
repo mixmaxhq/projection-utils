@@ -177,4 +177,42 @@ describe('ProjectionFieldSet', () => {
     expect(empty.union(singular)).toEqual(singular);
     expect(empty.intersect(singular)).toEqual(empty);
   });
+
+  it('should determine containment', () => {
+    const mandatoryFields = ProjectionFieldSet.fromDotted(
+      ['internalVersion', 'notifications.targets', 'share']);
+    expect(mandatoryFields.contains([])).toBe(false);
+    expect(mandatoryFields.contains(['internalVersion'])).toBe(true);
+    expect(mandatoryFields.contains(['notifications'])).toBe(false);
+    expect(mandatoryFields.contains(['notifications', 'targets'])).toBe(true);
+    expect(mandatoryFields.contains(['notifications', 'targets', 'subfield'])).toBe(true);
+    expect(mandatoryFields.containsDotted('')).toBe(false);
+    expect(mandatoryFields.containsDotted('internalVersion')).toBe(true);
+    expect(mandatoryFields.containsDotted('notifications')).toBe(false);
+    expect(mandatoryFields.containsDotted('notifications.targets')).toBe(true);
+    expect(mandatoryFields.containsDotted('notifications.targets.subfield')).toBe(true);
+  });
+
+  fit('should produce contained entries', () => {
+    const mandatoryFields = ProjectionFieldSet.fromDotted(
+      ['internalVersion', 'notifications.targets', 'share']);
+    expect([...mandatoryFields.get([])]).toEqual([...mandatoryFields.entries()]);
+    expect([...mandatoryFields.get([], false)]).toEqual([...mandatoryFields.entries()]);
+    expect([...mandatoryFields.getDotted('')]).toEqual([...mandatoryFields.toDotted()]);
+    expect([...mandatoryFields.getDotted('', false)]).toEqual([...mandatoryFields.toDotted()]);
+
+    expect([...mandatoryFields.get(['internalVersion'])]).toEqual([['internalVersion']]);
+    expect([...mandatoryFields.get(['internalVersion'], false)]).toEqual([[]]);
+    expect([...mandatoryFields.getDotted('internalVersion')]).toEqual(['internalVersion']);
+    expect([...mandatoryFields.getDotted('internalVersion', false)]).toEqual(['']);
+    expect([...mandatoryFields.get(['notifications'])]).toEqual([['notifications', 'targets']]);
+    expect([...mandatoryFields.get(['notifications'], false)]).toEqual([['targets']]);
+    expect([...mandatoryFields.getDotted('notifications')]).toEqual(['notifications.targets']);
+    expect([...mandatoryFields.getDotted('notifications', false)]).toEqual(['targets']);
+
+    expect([...mandatoryFields.get(['notifications', 'invalid'])]).toEqual([]);
+    expect([...mandatoryFields.get(['notifications', 'invalid'], false)]).toEqual([]);
+    expect([...mandatoryFields.getDotted('notifications.invalid')]).toEqual([]);
+    expect([...mandatoryFields.getDotted('notifications.invalid', false)]).toEqual([]);
+  });
 });

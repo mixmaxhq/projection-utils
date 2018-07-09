@@ -1,3 +1,10 @@
+function splitDot(path) {
+  if (!path.length) {
+    return [];
+  }
+  return path.split('.');
+}
+
 /**
  * A set of fields that are for a projection. This set can be intersected and
  * unioned with another set to enable simple implementation of field whitelists
@@ -92,6 +99,68 @@ class ProjectionFieldSet {
   }
 
   /**
+   * Check whether this field set includes the given path.
+   *
+   * @param {String[]} path The path to check.
+   * @returns {Boolean} Whether the path is in the field set. If you ask for
+   *   ['users', 'id'] and ['users'] is permitted, then we also return true -
+   *   we check whether the field would be included in the final projection.
+   */
+  contains(path) {
+    if (!Array.isArray(path)) {
+      throw new TypeError('expected field array');
+    }
+
+    return findNode(path, this._root) === true;
+  }
+
+  /**
+   * Check whether we contains the given dotted field.
+   *
+   * @param {String} path The dot-separated path to check.
+   * @returns {Boolean} Whether the path is contained in the field set.
+   */
+  containsDotted(path) {
+    return findNode(splitDot(path), this._root) === true;
+  }
+
+  /**
+   * Get the entries under the given path.
+   *
+   * @param {String[]} path The path to enumerate.
+   * @param {Boolean} includePrefix Whether to include the given path as a
+   *   prefix to the output entries.
+   * @returns {Iterator<String[]>} The fields under the given path.
+   */
+  *get(path, includePrefix = true) {
+    if (!Array.isArray(path)) {
+      throw new TypeError('expected field array');
+    }
+
+    const node = findNode(path, this._root);
+    if (node) {
+      yield* iterEntries(node, includePrefix ? [...path] : []);
+    }
+  }
+
+  /**
+   * Get the entries under the given dot-separated path. If we return an
+   * iterator that contains an empty string as its only element, then we contain
+   * the given path exactly.
+   *
+   * @param {String} path The path to enumerate.
+   * @param {Boolean} includePrefix Whether to include the given path as a
+   *   prefix to the output entries.
+   * @returns {Iterator<String>} The dot-separated fields under the given path.
+   */
+  *getDotted(path, includePrefix = true) {
+    const splitPath = splitDot(path), node = findNode(splitPath, this._root);
+    if (node) {
+      yield* toDottedIterable(iterEntries(node, includePrefix ? splitPath : []));
+    }
+  }
+
+  /**
    * Find the intersection of the two projection field sets. If one field set
    * includes all of the ['user'] path, and the other includes ['user.id',
    * 'user.email'], then the resulting field set will include the only
@@ -126,10 +195,8 @@ class ProjectionFieldSet {
    * @returns {Iterator<String>} The dot-separated paths represented by the
    *   projection field set.
    */
-  *toDotted() {
-    for (const path of this) {
-      yield path.join('.');
-    }
+  toDotted() {
+    return toDottedIterable(this);
   }
 
   /**
@@ -295,6 +362,30 @@ function intersection(a, b) {
 }
 
 /**
+ * Get the node at the given path, or true if the path is contained in the node
+ * entirely.
+ *
+ * @param {String[]} path The path items.
+ * @param {Boolean|Map} node The node to traverse.
+ * @returns {?Boolean|Map} The node identified by the path, or null if it's not
+ *   included.
+ */
+function findNode(path, node) {
+  for (const part of path) {
+    if (node === true) {
+      return true;
+    }
+
+    if (!node) {
+      return null;
+    }
+
+    node = node.get(part);
+  }
+  return node;
+}
+
+/**
  * For each string in the given iterable, produce that string split on its dots.
  *
  * @param {Iterable<String>} iterable The iterable to path.
@@ -308,6 +399,18 @@ function* toPathIterable(iterable) {
       throw new TypeError('expected iterable of dot-separated string fields');
     }
     yield dotField.split('.');
+  }
+}
+
+/**
+ * Convert an iterable of string arrays to dot-separated strings.
+ *
+ * @param {Iterable<String[]>} iterable The input iterable.
+ * @returns {Iterable<String>} The dot-separated iterable.
+ */
+function* toDottedIterable(iterable) {
+  for (const field of iterable) {
+    yield field.join('.');
   }
 }
 

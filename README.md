@@ -67,6 +67,35 @@ const dotJoined = Array.from(queryFields.toDotted());
 // => ['users.id', 'users.email', 'share', 'internalVersion']
 ```
 
+Check for field containment, and partial field containment:
+
+```js
+queryFields.contains(['users']);
+// => false, because only some of the fields in users are included
+
+// equivalent to the above
+queryFields.containsDotted('users');
+
+// produces the set of fields that are included under the users field
+Array.from(queryFields.get(['users']));
+// => [['users', 'id'], ['users', 'email']]
+
+Array.from(queryFields.getDotted('users'));
+// => ['users.id', 'users.email']
+
+// both produce no items
+Array.from(queryFields.get(['invalid']));
+Array.from(queryFields.getDotted('invalid'));
+// => []
+
+// exclude the users prefix
+Array.from(queryFields.get('users', false));
+// => [['id'], ['email']]
+
+Array.from(queryFields.getDotted('users', false));
+// => ['id', 'email']
+```
+
 Explicitly expand the set of fields:
 
 ```js
