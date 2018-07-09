@@ -1,0 +1,36 @@
+{
+  "name": "projection-utils",
+  "version": "1.0.0",
+  "description": "Utilities to work with projections (e.g. mongo)",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mixmaxhq/projection-utils.git"
+  },
+  "keywords": [
+    "deep",
+    "intersect",
+    "intersection",
+    "mongo",
+    "mongodb",
+    "projection",
+    "query",
+    "set",
+    "union"
+  ],
+  "author": "Eli Skeggs <eli@mixmax.com> (https://mixmax.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mixmaxhq/projection-utils/issues"
+  },
+  "homepage": "https://github.com/mixmaxhq/projection-utils#readme",
+  "devDependencies": {
+    "jest": "^23.3.0"
+  }
+}
