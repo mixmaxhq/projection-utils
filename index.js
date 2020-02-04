@@ -154,7 +154,8 @@ class ProjectionFieldSet {
    * @returns {Iterator<String>} The dot-separated fields under the given path.
    */
   *getDotted(path, includePrefix = true) {
-    const splitPath = splitDot(path), node = findNode(splitPath, this._root);
+    const splitPath = splitDot(path),
+      node = findNode(splitPath, this._root);
     if (node) {
       yield* toDottedIterable(iterEntries(node, includePrefix ? splitPath : []));
     }
@@ -234,7 +235,7 @@ ProjectionFieldSet.prototype[Symbol.iterator] = ProjectionFieldSet.prototype.ent
  * @returns {Iterator<String[]>} The paths that are encapsulated within the
  *   node's subtree.
  */
-function *iterEntries(node, prefix) {
+function* iterEntries(node, prefix) {
   if (node === true) {
     yield [...prefix];
   } else {
